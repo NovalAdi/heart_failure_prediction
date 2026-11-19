@@ -1,0 +1,108 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Heart Failure Prediction API",
+    "description": "API untuk memprediksi penyakit jantung menggunakan model Decision Tree (scikit-learn). Menerima input berupa objek JSON (11 fitur numerik/hasil encoding) maupun array berurutan.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "Server lokal"
+    }
+  ],
+  "paths": {
+    "/predict": {
+      "post": {
+        "summary": "Prediksi penyakit jantung",
+        "description": "Menerima 11 fitur (dalam bentuk JSON object atau array) dan mengembalikan hasil prediksi biner beserta tingkat keyakinan (confidence).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "Age": {"type": "integer", "description": "Usia pasien (tahun)"},
+                      "Sex": {"type": "integer", "enum": [0, 1], "description": "Jenis kelamin (F=0, M=1)"},
+                      "ChestPainType": {"type": "integer", "enum": [0, 1, 2, 3], "description": "Tipe nyeri dada (ASY=0, ATA=1, NAP=2, TA=3)"},
+                      "RestingBP": {"type": "integer", "description": "Tekanan darah istirahat (mmHg)"},
+                      "Cholesterol": {"type": "integer", "description": "Kolesterol serum (mg/dL)"},
+                      "FastingBS": {"type": "integer", "enum": [0, 1], "description": "Gula darah puasa >120 mg/dL (0=tidak, 1=ya)"},
+                      "RestingECG": {"type": "integer", "enum": [0, 1, 2], "description": "Hasil ECG istirahat (LVH=0, Normal=1, ST=2)"},
+                      "MaxHR": {"type": "integer", "description": "Detak jantung maksimum (bpm)"},
+                      "ExerciseAngina": {"type": "integer", "enum": [0, 1], "description": "Angina akibat olahraga (N=0, Y=1)"},
+                      "Oldpeak": {"type": "number", "description": "Depresi ST akibat olahraga"},
+                      "ST_Slope": {"type": "integer", "enum": [0, 1, 2], "description": "Kemiringan segmen ST (Down=0, Flat=1, Up=2)"}
+                    },
+                    "required": ["Age", "Sex", "ChestPainType", "RestingBP", "Cholesterol", "FastingBS", "RestingECG", "MaxHR", "ExerciseAngina", "Oldpeak", "ST_Slope"]
+                  },
+                  {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "minItems": 11,
+                    "maxItems": 11,
+                    "description": "Urutan: Age, Sex, ChestPainType, RestingBP, Cholesterol, FastingBS, RestingECG, MaxHR, ExerciseAngina, Oldpeak, ST_Slope"
+                  }
+                ]
+              },
+              "examples": {
+                "negative": {
+                  "summary": "1. Test Negative (Normal)",
+                  "value": {
+                    "Age": 40,
+                    "Sex": 1,
+                    "ChestPainType": 1,
+                    "RestingBP": 140,
+                    "Cholesterol": 289,
+                    "FastingBS": 0,
+                    "RestingECG": 1,
+                    "MaxHR": 172,
+                    "ExerciseAngina": 0,
+                    "Oldpeak": 0,
+                    "ST_Slope": 2
+                  }
+                },
+                "positive": {
+                  "summary": "2. Test Positive (Berisiko)",
+                  "value": {
+                    "Age": 62,
+                    "Sex": 1,
+                    "ChestPainType": 0,
+                    "RestingBP": 160,
+                    "Cholesterol": 0,
+                    "FastingBS": 1,
+                    "RestingECG": 2,
+                    "MaxHR": 112,
+                    "ExerciseAngina": 1,
+                    "Oldpeak": 2.5,
+                    "ST_Slope": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Hasil prediksi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "prediction": {"type": "integer", "example": 0, "description": "0 = tidak terindikasi, 1 = terindikasi"},
+                    "label": {"type": "string", "example": "negative", "description": "negative atau positive"},
+                    "confidence": {"type": "string", "example": "100.0%", "description": "Tingkat keyakinan model terhadap hasil prediksi dalam persen"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
